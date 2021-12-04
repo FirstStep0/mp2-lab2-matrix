@@ -11,21 +11,80 @@
 
 void main()
 {
-    TMatrix<int> a(5), b(5), c(5);
-    int i, j;
-
+    int size = 5;
+    TMatrix<int> a(size), b(size);
     setlocale(LC_ALL, "Russian");
-    cout << "Тестирование программ поддержки представления треугольных матриц"
-        << endl;
-    for (i = 0; i < 5; i++)
-        for (j = i; j < 5; j++)
-        {
-            a[i][j] = i * 10 + j;
-            b[i][j] = (i * 10 + j) * 100;
+    srand(time(0));
+    int code = -1, Exit = 7;
+    while (code != Exit) {
+        system("cls");
+        cout << "Тестирование программ поддержки представления треугольных матриц\n";
+        cout << "Выберите команду:\n";
+        cout << "1. Изменить размер матриц (size = " << size << ")\n";
+        cout << "2. Заполнить матрицы случайными числами\n";
+        cout << "3. Заполнить матрицы вручную\n";
+        cout << "4. Вывести матрицы\n";
+        cout << "5. Сложить матрицы\n";
+        cout << "6. Вычесть матрицы\n";
+        cout << "7. Выход\n";
+        cout << ">";
+        cin.clear();
+        cin.ignore(10000, '\n');
+        cin >> code;
+        switch (code) {
+        case 1: {
+            int s = -1;
+            while ((s < 0) || (s > MAX_MATRIX_SIZE)) {
+                cout << "Введите новый размер матриц\n";
+                cin.clear();
+                cin.ignore(10000, '\n');
+                cin >> s;
+            }
+            size = s;
+            a = b = TMatrix<int>(size);
+            break;
         }
-    c = a + b;
-    cout << "Matrix a = " << endl << a << endl;
-    cout << "Matrix b = " << endl << b << endl;
-    cout << "Matrix c = a + b" << endl << c << endl;
+        case 2: {
+            for (int i = 0; i < size; i++) {
+                for (int j = i; j < size; j++) {
+                    a[i].set(j, rand());
+                    b[i].set(j, rand());
+                }
+            }
+            cout << "Матрицы заполнены случайными числами\n";
+            break;
+        }
+        case 3: {
+            cin >> a >> b;
+            cout << "Матрицы заполнены\n";
+            break;
+        }
+        case 4: {
+            cout << a << "\n";
+            cout << b << "\n";
+            break;
+        }
+        case 5: {
+            cout << a;
+            cout << "+\n";
+            cout << b;
+            cout << "=\n";
+            cout << a + b << "\n";
+            break;
+        }
+        case 6: {
+            cout << a;
+            cout << "-\n";
+            cout << b;
+            cout << "=\n";
+            cout << a - b << "\n";
+            break;
+        }
+        default: {
+            cout << "Команда не найдена\n";
+        }
+        }
+        system("pause");
+    }
 }
 //---------------------------------------------------------------------------

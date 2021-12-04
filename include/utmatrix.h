@@ -18,9 +18,6 @@ const int MAX_MATRIX_SIZE = 10000;
 // Шаблон вектора
 template <class ValType>
 class TVector {
-private:
-    ValType get_value(int pos) const;   // значение вектора
-    ValType& TVector<ValType>::at(int pos);   // доступ без проверки
 protected:
     ValType* pVector;
     int Size;       // размер вектора
@@ -33,6 +30,9 @@ public:
     int GetSize() { return Size; }            // размер хранимой части вектора
     int GetStartIndex() { return StartIndex; }// индекс первого ненулевого элемента
     ValType& operator[](int pos);             // доступ с проверкой
+    ValType& TVector<ValType>::at(int pos);   // доступ без проверки
+    ValType get(int pos) const;               //получить значение вектора
+    void set(int pos, const ValType& value);  //задать значение вектора
     bool operator==(const TVector& v) const;  // сравнение
     bool operator!=(const TVector& v) const;  // сравнение
     TVector& operator=(const TVector& v);     // присваивание
@@ -84,18 +84,44 @@ TVector<ValType>::~TVector() {
     StartIndex = 0;
 }
 
-template <class ValType> // доступ с проверкой
+template <class ValType> // доступ с проверкой для ненулевых элементов
 ValType& TVector<ValType>::operator[](int pos)
 {
     if (pos < StartIndex || pos >= StartIndex + Size) throw exception("pos < StartIndex || pos >= StartIndex + Size");
     return pVector[pos - StartIndex];
-} /*-------------------------------------------------------------------------*/
+}
 
-template <class ValType> // значение
-ValType TVector<ValType>::get_value(int pos) const
+template <class ValType>
+ValType TVector<ValType>::get(int pos) const //получить значение произвольного элемента вектора
 {
+    if (pos < 0 || pos >= StartIndex + Size) throw exception("pos < 0 || pos >= StartIndex + Size");
     return (pos >= StartIndex ? this->pVector[pos - StartIndex] : 0);
-} /*-------------------------------------------------------------------------*/
+}
+
+template <class ValType> //позволяет привоить значение элементу с индексом 0 <= i < StartIndex
+void TVector<ValType>::set(int pos, const ValType& value) 
+{
+    if (pos < 0 || pos >= StartIndex + Size) throw exception("pos < 0 || pos >= StartIndex + Size");
+    if (value != 0) {
+        if (pos >= StartIndex) {
+            this->at(pos) = value;
+        }
+        else {
+            int newSize = StartIndex + Size - pos;
+            int newStartIndex = pos;
+            ValType* temp = new ValType[newSize];
+            for (int i = 0; i < newSize; i++) {
+                temp[i] = this->get(i + newStartIndex);
+            }
+            temp[0] = value;
+            delete[] pVector;
+            pVector = temp;
+            StartIndex = newStartIndex;
+            Size = newSize;
+        }
+    }
+}
+
 template <class ValType> // доступ без проверки
 ValType& TVector<ValType>::at(int pos)
 {
@@ -111,7 +137,7 @@ bool TVector<ValType>::operator==(const TVector& v) const
         }
     }
     return true;
-} /*-------------------------------------------------------------------------*/
+}
 
 template <class ValType> // сравнение
 bool TVector<ValType>::operator!=(const TVector& v) const {
@@ -146,12 +172,12 @@ TVector<ValType> TVector<ValType>::operator+(const ValType& val)
         n = 0;
     }*/
     //считаем кол-во нулей в новом векторе
-    while (n < (StartIndex + Size) && (get_value(n) + val) == 0) {
+    while (n < (StartIndex + Size) && (get(n) + val) == 0) {
         n++;
     }
     TVector<ValType> temp(StartIndex + Size - n, n);
     for (int i = n; i < StartIndex + Size; i++) {
-        temp.at(i) = get_value(i) + val;
+        temp.at(i) = get(i) + val;
     }
     return temp;
 } /*-------------------------------------------------------------------------*/
@@ -167,12 +193,12 @@ TVector<ValType> TVector<ValType>::operator-(const ValType& val)
         n = 0;
     }*/
     //считаем кол-во нулей в новом векторе
-    while (n < (StartIndex + Size) && (get_value(n) - val) == 0) {
+    while (n < (StartIndex + Size) && (get(n) - val) == 0) {
         n++;
     }
     TVector<ValType> temp(StartIndex + Size - n, n);
     for (int i = n; i < StartIndex + Size; i++) {
-        temp.at(i) = get_value(i) - val;
+        temp.at(i) = get(i) - val;
     }
     return temp;
 } /*-------------------------------------------------------------------------*/
@@ -188,12 +214,12 @@ TVector<ValType> TVector<ValType>::operator*(const ValType& val)
         n = StartIndex;
     }*/
     //считаем кол-во нулей в новом векторе
-    while (n < (StartIndex + Size) && (get_value(n) * val) == 0) {
+    while (n < (StartIndex + Size) && (get(n) * val) == 0) {
         n++;
     }
     TVector<ValType> temp(StartIndex + Size - n, n);
     for (int i = n; i < StartIndex + Size; i++) {
-        temp.at(i) = get_value(i) * val;
+        temp.at(i) = get(i) * val;
     }
     return temp;
 } /*-------------------------------------------------------------------------*/
@@ -204,12 +230,12 @@ TVector<ValType> TVector<ValType>::operator+(const TVector<ValType>& v)
     if ((Size + StartIndex != v.Size + v.StartIndex)) throw exception("vector sizes are not equal");
     int n = StartIndex < v.StartIndex ? StartIndex : v.StartIndex; //min(StartIndex, v.StartIndex)
     //считаем кол-во нулей в новом векторе
-    while (n < (StartIndex + Size) && (get_value(n) + v.get_value(n)) == 0) {
+    while (n < (StartIndex + Size) && (get(n) + v.get(n)) == 0) {
         n++;
     };
     TVector<ValType> temp(StartIndex + Size - n, n);
     for (int i = n; i < StartIndex + Size; i++) {
-        temp.at(i) = get_value(i) + v.get_value(i);
+        temp.at(i) = get(i) + v.get(i);
     }
     return temp;
 } /*-------------------------------------------------------------------------*/
@@ -220,12 +246,12 @@ TVector<ValType> TVector<ValType>::operator-(const TVector<ValType>& v)
     if ((Size + StartIndex != v.Size + v.StartIndex)) throw exception("vector sizes are not equal");
     int n = StartIndex < v.StartIndex ? StartIndex : v.StartIndex; //min(StartIndex, v.StartIndex)
     //считаем кол-во нулей в новом векторе
-    while (n < (StartIndex + Size) && (get_value(n) - v.get_value(n)) == 0) {
+    while (n < (StartIndex + Size) && (get(n) - v.get(n)) == 0) {
         n++;
     }
     TVector<ValType> temp(StartIndex + Size - n, n);
     for (int i = n; i < StartIndex + Size; i++) {
-        temp.at(i) = get_value(i) - v.get_value(i);
+        temp.at(i) = get(i) - v.get(i);
     }
     return temp;
 }/*-------------------------------------------------------------------------*/
@@ -237,7 +263,7 @@ ValType TVector<ValType>::operator*(const TVector<ValType>& v)
     int n = StartIndex > v.StartIndex ? StartIndex : v.StartIndex; //max(StartIndex, v.StartIndex)
     ValType sum = 0;
     for (int i = n; i < Size + StartIndex; i++) {
-        sum += get_value(i) * v.get_value(i);
+        sum += get(i) * v.get(i);
     }
     return sum;
 } /*-------------------------------------------------------------------------*/
@@ -311,23 +337,13 @@ TMatrix<ValType>& TMatrix<ValType>::operator=(const TMatrix<ValType>& mt)
 template <class ValType> // сложение
 TMatrix<ValType> TMatrix<ValType>::operator+(const TMatrix<ValType>& mt)
 {
-    if (this->Size != mt.Size)throw exception("this->Size != mt.Size");
-    TMatrix<ValType> mat(Size);
-    for (int i = 0; i < Size; i++) {
-        mat[i] = this->pVector[i] + mt.pVector[i];
-    }
-    return mat;
+   return TVector<TVector<ValType>>::operator+(mt);
 } /*-------------------------------------------------------------------------*/
 
 template <class ValType> // вычитание
 TMatrix<ValType> TMatrix<ValType>::operator-(const TMatrix<ValType>& mt)
 {
-    if (this->Size != mt.Size)throw exception("this->Size != mt.Size");
-    TMatrix<ValType> mat(Size);
-    for (int i = 0; i < Size; i++) {
-        mat[i] = this->pVector[i] - mt.pVector[i];
-    }
-    return mat;
+    return TVector<TVector<ValType>>::operator-(mt);
 } /*-------------------------------------------------------------------------*/
 
 // TVector О3 Л2 П4 С6
