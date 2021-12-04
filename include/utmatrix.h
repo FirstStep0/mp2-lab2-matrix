@@ -20,8 +20,8 @@ template <class ValType>
 class TVector {
 protected:
     ValType* pVector;
-    int Size;       // размер вектора
-    int StartIndex; // индекс первого элемента вектора
+    int Size;       // размер ненулевой части вектора
+    int StartIndex; // индекс первого ненулевого элемента вектора
 public:
    // TVector() = default;
     TVector(int s = 0, int si = 0);
@@ -30,7 +30,7 @@ public:
     int GetSize() { return Size; }            // размер хранимой части вектора
     int GetStartIndex() { return StartIndex; }// индекс первого ненулевого элемента
     ValType& operator[](int pos);             // доступ с проверкой
-    ValType& TVector<ValType>::at(int pos);   // доступ без проверки
+    ValType& at(int pos);                     // доступ без проверки
     ValType get(int pos) const;               //получить значение вектора
     void set(int pos, const ValType& value);  //задать значение вектора
     bool operator==(const TVector& v) const;  // сравнение
@@ -98,15 +98,15 @@ ValType TVector<ValType>::get(int pos) const //получить значение
     return (pos >= StartIndex ? this->pVector[pos - StartIndex] : 0);
 }
 
-template <class ValType> //позволяет привоить значение элементу с индексом 0 <= i < StartIndex
-void TVector<ValType>::set(int pos, const ValType& value) 
+template <class ValType> //позволяет присвоить значение элементу с индексом 0 <= i < StartIndex
+void TVector<ValType>::set(int pos, const ValType& value)
 {
     if (pos < 0 || pos >= StartIndex + Size) throw exception("pos < 0 || pos >= StartIndex + Size");
-    if (value != 0) {
-        if (pos >= StartIndex) {
-            this->at(pos) = value;
-        }
-        else {
+    if (pos >= StartIndex) {
+        this->at(pos) = value;
+    }
+    else {
+        if (value != 0) {
             int newSize = StartIndex + Size - pos;
             int newStartIndex = pos;
             ValType* temp = new ValType[newSize];
@@ -303,7 +303,7 @@ TMatrix<ValType>::TMatrix(int s) : TVector<TVector<ValType> >(s)
 {
     if (s > MAX_MATRIX_SIZE)throw exception("s > MAX_MATRIX_SIZE");
     for (int i = 0; i < Size; i++) {
-        pVector[i] = TVector<ValType>(Size - i, i);
+         pVector[i] = TVector<ValType>(Size - i, i); //по умолчанию верхнетреугольная
     }
 } /*-------------------------------------------------------------------------*/
 

@@ -28,17 +28,17 @@ void main()
         cout << "6. Вычесть матрицы\n";
         cout << "7. Выход\n";
         cout << ">";
+        cin >> code;
         cin.clear();
         cin.ignore(10000, '\n');
-        cin >> code;
         switch (code) {
         case 1: {
             int s = -1;
             while ((s < 0) || (s > MAX_MATRIX_SIZE)) {
                 cout << "Введите новый размер матриц\n";
+                cin >> s;
                 cin.clear();
                 cin.ignore(10000, '\n');
-                cin >> s;
             }
             size = s;
             a = b = TMatrix<int>(size);
